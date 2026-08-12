@@ -72,21 +72,22 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
-bool encoder_update_user(uint8_t index, bool clockwise) {
-    if (get_highest_layer(layer_state) == _RAW) {
-        rh_send(RH_ENC_ROTATE, index, clockwise ? 1 : 0);
-        return false; // handled; skip the encoder map (volume)
-    }
-    return true;      // _BASE etc: let the encoder map send volume
-}
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (get_highest_layer(layer_state) == _RAW) {
-        // matrix is 1x11, so the column is the slot index (0 = encoder button)
-        rh_send(RH_SLOT_PRESS, record->event.key.col, record->event.pressed ? 1 : 0);
-        return false; // don't emit a keycode while on the raw layer
+    if (get_highest_layer(layer_state) != _RAW)
+        return true; // _BASE etc: normal keyboard, encoder map drives volume
+
+    // On _RAW, every event is reported to the host. With ENCODER_MAP the encoder
+    // arrives here too, as an ENCODER_{CW,CCW}_EVENT (its .col is the encoder
+    // index, so the direction lives in the event type, not the column).
+    keyevent_t *e = &record->event;
+    if (e->type == ENCODER_CW_EVENT || e->type == ENCODER_CCW_EVENT) {
+        if (e->pressed) // map fires press+release per detent; report once
+            rh_send(RH_ENC_ROTATE, e->key.col, e->type == ENCODER_CW_EVENT ? 1 : 0);
+    } else {
+        // real key: matrix is 1x11, so the column is the slot (0 = encoder button)
+        rh_send(RH_SLOT_PRESS, e->key.col, e->pressed ? 1 : 0);
     }
-    return true;
+    return false; // consume everything while on the raw layer
 }
 
 // Host -> device commands that VIA/Vial does not recognise are routed here.
