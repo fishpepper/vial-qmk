@@ -56,16 +56,16 @@ pins this board does not have — including `SPI_MOSI_PIN GP19`, which is the
 WS2812 data line here.
 
 There is a `ninex-ram-boot` branch that builds the firmware to run entirely
-from SRAM (`make fishpepper/ninex:vial NINEX_RAM=yes`, then
+from SRAM (`make teamowl/ninex:vial NINEX_RAM=yes`, then
 `picotool load -x`), for a board whose QSPI flash is missing or dead.
 
 Make example for this keyboard (after setting up your build environment):
 
-    make fishpepper/ninex:vial
+    make teamowl/ninex:vial
 
 Flashing example for this keyboard:
 
-    make fishpepper/ninex:vial:flash
+    make teamowl/ninex:vial:flash
 
 ## Bootloader
 
